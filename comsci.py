@@ -6,7 +6,7 @@ DB_NAME = "petrol_auto_invoice.db"
 # ---------------- DATABASE INITIALIZATION ----------------
 
 def init_db():
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect("mydb.db")
     c = conn.cursor()
     c.execute("PRAGMA foreign_keys = ON;")
 
