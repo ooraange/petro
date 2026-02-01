@@ -31,22 +31,6 @@ def init_db(conn: sqlite3.Connection) -> None:
 
     conn.execute(
         """
-        CREATE TABLE IF NOT EXISTS warehouse_transaction_ledger (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            entry_type TEXT NOT NULL CHECK (entry_type IN ('DEBIT','CREDIT')),
-            fuel_type TEXT NOT NULL,
-            liters REAL NOT NULL CHECK (liters >= 0),
-            created_at TEXT NOT NULL DEFAULT (datetime('now'))
-        );
-        """
-    )
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_warehouse_ledger_fuel_type "
-        "ON warehouse_transaction_ledger(fuel_type);"
-    )
-
-    conn.execute(
-        """
         CREATE TABLE IF NOT EXISTS customer_transaction_ledger (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             customer_id INTEGER NOT NULL,
@@ -88,4 +72,3 @@ def _normalize_fuel_type(fuel_type: str) -> str:
     if normalized not in {"PETROL", "DIESEL"}:
         raise ValueError("fuel_type must be 'PETROL' or 'DIESEL'")
     return normalized
-

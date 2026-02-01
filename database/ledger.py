@@ -43,82 +43,6 @@ def date_filtering_function(
 
 
 @dataclass(frozen=True)
-class WarehouseLedgerEntry:
-    id: int
-    entry_type: str
-    fuel_type: str
-    liters: float
-    created_at: str
-
-
-def record_warehouse_transaction(
-    conn: sqlite3.Connection,
-    *,
-    entry_type: str,
-    fuel_type: str,
-    liters: float,
-    created_at: str | None = None,
-) -> int:
-    entry_type = _normalize_entry_type(entry_type)
-    fuel_type = _normalize_fuel_type(fuel_type)
-    liters = float(liters)
-    if liters < 0:
-        raise ValueError("liters must be >= 0")
-
-    if created_at is None:
-        conn.execute(
-            """
-            INSERT INTO warehouse_transaction_ledger (entry_type, fuel_type, liters)
-            VALUES (?, ?, ?)
-            """,
-            (entry_type, fuel_type, liters),
-        )
-    else:
-        conn.execute(
-            """
-            INSERT INTO warehouse_transaction_ledger (entry_type, fuel_type, liters, created_at)
-            VALUES (?, ?, ?, ?)
-            """,
-            (entry_type, fuel_type, liters, created_at),
-        )
-
-    conn.commit()
-    return int(conn.execute("SELECT last_insert_rowid();").fetchone()[0])
-
-
-def list_warehouse_ledger(
-    conn: sqlite3.Connection,
-    *,
-    fuel_type: str | None = None,
-    on_date: str | None = None,
-    start_date: str | None = None,
-    end_date: str | None = None,
-) -> Sequence[sqlite3.Row]:
-    where_parts: list[str] = []
-    params: list[object] = []
-
-    if fuel_type:
-        where_parts.append("fuel_type = ?")
-        params.append(_normalize_fuel_type(fuel_type))
-
-    date_clause, date_params = date_filtering_function(
-        column="created_at",
-        on_date=on_date,
-        start_date=start_date,
-        end_date=end_date,
-    )
-    if date_clause:
-        where_parts.append(date_clause)
-        params.extend(date_params)
-
-    where_sql = f"WHERE {' AND '.join(where_parts)}" if where_parts else ""
-    return conn.execute(
-        f"SELECT * FROM warehouse_transaction_ledger {where_sql} ORDER BY id",
-        params,
-    ).fetchall()
-
-
-@dataclass(frozen=True)
 class CustomerLedgerEntry:
     id: int
     customer_id: int
@@ -142,6 +66,27 @@ def record_customer_transaction(
     liters = float(liters)
     if liters < 0:
         raise ValueError("liters must be >= 0")
+
+    if entry_type == "DEBIT":
+        row = conn.execute(
+            """
+            SELECT COALESCE(SUM(
+                CASE
+                    WHEN entry_type = 'CREDIT' THEN liters
+                    WHEN entry_type = 'DEBIT' THEN -liters
+                    ELSE 0
+                END
+            ), 0) AS balance
+            FROM customer_transaction_ledger
+            WHERE customer_id = ? AND fuel_type = ?
+            """,
+            (int(customer_id), fuel_type),
+        ).fetchone()
+        balance = float(row["balance"] or 0)
+        if liters > balance:
+            raise ValueError(
+                f"Cannot debit {liters:g} L; available balance is {balance:g} L."
+            )
 
     if created_at is None:
         conn.execute(
