@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 
-from .tk_support import messagebox, tk, ttk
+from .tk_support import center_window, messagebox, tk, ttk
 from ..database import create_user, delete_user_by_id, edit_user_by_id
 
 
@@ -184,7 +184,7 @@ class CustomerManagementPage(ttk.Frame):
                         phone_number=phone_var.get(),
                         address=address_var.get(),
                     )
-            except Exception as exc:  # student-friendly: show any error as a dialog
+            except Exception as exc:
                 messagebox.showerror(f"{title} failed", str(exc), parent=window)
                 return
 
@@ -197,6 +197,7 @@ class CustomerManagementPage(ttk.Frame):
         )
 
         body.columnconfigure(1, weight=1)
+        center_window(window)
 
     def _delete_selected(self) -> None:
         customer_id = self.get_selected_customer_id()

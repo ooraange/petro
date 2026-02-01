@@ -5,7 +5,7 @@ from .controller import ScreenController
 from .customers import CustomerManagementPage
 from .home_page import HomePage
 from .invoice_page import InvoicePage
-from .ledger import CustomerLedgerPage
+from .ledger_page import CustomerLedgerPage
 from .login_page import LoginPage
 
 __all__ = [

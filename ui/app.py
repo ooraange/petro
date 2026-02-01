@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from .controller import ScreenController
 from .customers import CustomerManagementPage
-from .ledger import CustomerLedgerPage
+from .ledger_page import CustomerLedgerPage
 from .home_page import HomePage
 from .invoice_page import InvoicePage
 from .login_page import LoginPage
@@ -13,8 +13,9 @@ from ..database import DB_NAME, init
 class PetroApp(tk.Tk):
     def __init__(self, *, db_path: str = DB_NAME) -> None:
         super().__init__()
-        self.title("Petro UI (Student Example)")
+        self.title("Petro Ledger App")
         self.minsize(980, 620)
+        self.geometry("1100x700")
 
         self.conn = init(db_path)
 

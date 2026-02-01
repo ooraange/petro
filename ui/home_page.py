@@ -3,8 +3,6 @@ from __future__ import annotations
 from .controller import ScreenController
 from .tk_support import tk, ttk
 
-_HOME_LOGO_PATH = r"C:\\Users\\SachaLawrenceJohnGr\u00e9\\Desktop\\Personal\\isa_computer_science\\petro\\logo.png"
-
 
 class HomePage(ttk.Frame):
     def __init__(self, parent: tk.Misc, *, controller: ScreenController) -> None:
@@ -20,15 +18,6 @@ class HomePage(ttk.Frame):
         ttk.Label(self, textvariable=self.total_stock_var, style="Subtle.TLabel").pack(
             anchor="w", pady=(6, 0)
         )
-
-        self._logo_image: tk.PhotoImage | None = None
-        try:
-            self._logo_image = tk.PhotoImage(file=_HOME_LOGO_PATH)
-        except tk.TclError:
-            self._logo_image = None
-
-        if self._logo_image is not None:
-            ttk.Label(self, image=self._logo_image).pack(anchor="w", pady=(8, 0))
 
         body = ttk.Frame(self)
         body.pack(fill="both", expand=True, pady=(16, 0))

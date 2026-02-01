@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 
-from .tk_support import messagebox, tk, ttk
+from .tk_support import center_window, messagebox, tk, ttk
 from ..database import (
     compute_running_balance,
     list_customer_ledger,
@@ -102,9 +102,17 @@ class CustomerLedgerPage(ttk.Frame):
         ).grid(row=2, column=0, sticky="ew")
         ttk.Frame(action_panel, height=10).grid(row=3, column=0, sticky="s")
 
-        self.balance_var = tk.StringVar(value="Total Stock: 0 L")
-        ttk.Label(view, textvariable=self.balance_var, style="Header.TLabel").grid(
-            row=2, column=0, sticky="w", pady=(12, 0)
+        totals = ttk.Frame(view)
+        totals.grid(row=2, column=0, sticky="w", pady=(12, 0))
+
+        self.petrol_total_var = tk.StringVar(value="Total Petrol: 0 L")
+        self.diesel_total_var = tk.StringVar(value="Total Diesel: 0 L")
+
+        ttk.Label(totals, textvariable=self.petrol_total_var, style="Header.TLabel").pack(
+            anchor="w"
+        )
+        ttk.Label(totals, textvariable=self.diesel_total_var, style="Header.TLabel").pack(
+            anchor="w"
         )
 
         view.columnconfigure(0, weight=1)
@@ -209,6 +217,16 @@ class CustomerLedgerPage(ttk.Frame):
 
             window.destroy()
             self.refresh_customer_ledger()
+            if entry_type == "DEBIT" and self.controller is not None:
+                self.controller.set_last_invoice(
+                    {
+                        "customer_display": selection,
+                        "customer_id": customer_id,
+                        "fuel_type": fuel_var.get(),
+                        "liters": liters,
+                    }
+                )
+                self.controller.show("invoice")
 
         ttk.Button(buttons, text=title, command=submit).pack(side="left")
         ttk.Button(buttons, text="Cancel", command=window.destroy).pack(
@@ -216,6 +234,7 @@ class CustomerLedgerPage(ttk.Frame):
         )
 
         body.columnconfigure(1, weight=1)
+        center_window(window)
 
     def refresh_customer_ledger(self) -> None:
         for item in self.ledger_tree.get_children():
@@ -223,7 +242,8 @@ class CustomerLedgerPage(ttk.Frame):
 
         raw_customer = (self.filter_customer_name_var.get() or "").strip()
         if not raw_customer:
-            self.balance_var.set("Total Stock: 0 L")
+            self.petrol_total_var.set("Total Petrol: 0 L")
+            self.diesel_total_var.set("Total Diesel: 0 L")
             return
 
         try:
@@ -237,7 +257,8 @@ class CustomerLedgerPage(ttk.Frame):
             )
         except Exception as exc:
             messagebox.showerror("Load ledger failed", str(exc), parent=self)
-            self.balance_var.set("Total Stock: 0 L")
+            self.petrol_total_var.set("Total Petrol: 0 L")
+            self.diesel_total_var.set("Total Diesel: 0 L")
             return
 
         for row in rows:
@@ -253,5 +274,9 @@ class CustomerLedgerPage(ttk.Frame):
                 ),
             )
 
-        balance = compute_running_balance(rows)
-        self.balance_var.set(f"Total Stock: {balance:g} L")
+        petrol_rows = [row for row in rows if (row["fuel_type"] or "").upper() == "PETROL"]
+        diesel_rows = [row for row in rows if (row["fuel_type"] or "").upper() == "DIESEL"]
+        petrol_balance = compute_running_balance(petrol_rows)
+        diesel_balance = compute_running_balance(diesel_rows)
+        self.petrol_total_var.set(f"Total Petrol: {petrol_balance:g} L")
+        self.diesel_total_var.set(f"Total Diesel: {diesel_balance:g} L")

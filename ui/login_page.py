@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from .controller import ScreenController
 from .tk_support import messagebox, tk, ttk
 
 _LOGIN_PASSWORD = "admin"
+_LOGIN_LOGO_PATH = Path(__file__).resolve().parents[1] / "logo.png"
 
 
 class LoginPage(ttk.Frame):
@@ -18,9 +21,20 @@ class LoginPage(ttk.Frame):
             row=0, column=0, columnspan=2, pady=(0, 12)
         )
 
-        avatar = tk.Canvas(card, width=72, height=72, highlightthickness=0)
-        avatar.create_oval(10, 10, 70, 70, outline="#333", width=2)
-        avatar.grid(row=1, column=0, columnspan=2, pady=(0, 16))
+        self._logo_image: tk.PhotoImage | None = None
+        try:
+            self._logo_image = tk.PhotoImage(file=str(_LOGIN_LOGO_PATH))
+        except tk.TclError:
+            self._logo_image = None
+
+        if self._logo_image is not None:
+            ttk.Label(card, image=self._logo_image).grid(
+                row=1, column=0, columnspan=2, pady=(0, 16)
+            )
+        else:
+            avatar = tk.Canvas(card, width=72, height=72, highlightthickness=0)
+            avatar.create_oval(10, 10, 70, 70, outline="#333", width=2)
+            avatar.grid(row=1, column=0, columnspan=2, pady=(0, 16))
 
         ttk.Label(card, text="Accounting Password").grid(
             row=2, column=0, columnspan=2, pady=(0, 4)
