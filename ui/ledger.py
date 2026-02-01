@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import sqlite3
 
-from .customers import CustomersFrame
 from .tk_support import messagebox, tk, ttk
 from ..database import (
     compute_running_balance,
@@ -11,19 +10,29 @@ from ..database import (
 )
 
 
-class LedgerFrame(ttk.Frame):
+class CustomerLedgerPage(ttk.Frame):
     def __init__(
-        self, parent: tk.Misc, *, conn: sqlite3.Connection, customers: CustomersFrame
+        self, parent: tk.Misc, *, conn: sqlite3.Connection, controller: object | None = None
     ) -> None:
-        super().__init__(parent, padding=12)
+        super().__init__(parent, padding=16)
         self.conn = conn
-        self.customers = customers
+        self.controller = controller
+
+        header = ttk.Frame(self)
+        header.grid(row=0, column=0, sticky="ew")
+        if self.controller is not None:
+            ttk.Button(
+                header, text="Back", command=lambda: self.controller.show("home")
+            ).pack(side="left")
+        ttk.Label(header, text="Customer Ledger", style="Header.TLabel").pack(
+            side="left", padx=(12, 0)
+        )
 
         self._customer_display_to_id: dict[str, int] = {}
         self._customer_id_to_display: dict[int, str] = {}
 
         view = ttk.LabelFrame(self, text="Customer Transactions History", padding=12)
-        view.grid(row=0, column=0, sticky="nsew")
+        view.grid(row=1, column=0, sticky="nsew", pady=(12, 0))
 
         filters = ttk.Frame(view)
         filters.grid(row=0, column=0, sticky="ew")
@@ -94,8 +103,8 @@ class LedgerFrame(ttk.Frame):
         ttk.Frame(action_panel, height=10).grid(row=3, column=0, sticky="s")
 
         self.balance_var = tk.StringVar(value="Total Stock: 0 L")
-        ttk.Label(view, textvariable=self.balance_var).grid(
-            row=2, column=0, sticky="w", pady=(8, 0)
+        ttk.Label(view, textvariable=self.balance_var, style="Header.TLabel").grid(
+            row=2, column=0, sticky="w", pady=(12, 0)
         )
 
         view.columnconfigure(0, weight=1)
@@ -104,6 +113,9 @@ class LedgerFrame(ttk.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
 
+        self.refresh_customer_options()
+
+    def on_show(self) -> None:
         self.refresh_customer_options()
 
     def _on_filter_selected(self, _event: tk.Event | None = None) -> None:

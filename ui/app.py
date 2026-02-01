@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from .controller import ScreenController
-from .customer_ledger_page import CustomerLedgerPage
-from .customer_management_page import CustomerManagementPage
+from .customers import CustomerManagementPage
+from .ledger import CustomerLedgerPage
 from .home_page import HomePage
 from .invoice_page import InvoicePage
 from .login_page import LoginPage
@@ -40,11 +40,11 @@ class PetroApp(tk.Tk):
 
         self.login_page = LoginPage(container, controller=controller)
         self.home_page = HomePage(container, controller=controller)
-        self.customers_page = CustomerManagementPage(container, controller=controller)
+        self.customers_page = CustomerManagementPage(
+            container, controller=controller, conn=self.conn
+        )
         self.ledger_page = CustomerLedgerPage(
-            container,
-            controller=controller,
-            customers_frame=self.customers_page.customers_frame,
+            container, controller=controller, conn=self.conn
         )
         self.invoice_page = InvoicePage(container, controller=controller)
 

@@ -36,7 +36,7 @@ def init_db(conn: sqlite3.Connection) -> None:
             customer_id INTEGER NOT NULL,
             entry_type TEXT NOT NULL CHECK (entry_type IN ('DEBIT','CREDIT')),
             fuel_type TEXT NOT NULL,
-            liters REAL NOT NULL CHECK (liters >= 0),
+            liters REAL NOT NULL CHECK (liters > 0),
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE
         );

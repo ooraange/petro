@@ -6,13 +6,26 @@ from .tk_support import messagebox, tk, ttk
 from ..database import create_user, delete_user_by_id, edit_user_by_id
 
 
-class CustomersFrame(ttk.Frame):
-    def __init__(self, parent: tk.Misc, *, conn: sqlite3.Connection) -> None:
-        super().__init__(parent, padding=12)
+class CustomerManagementPage(ttk.Frame):
+    def __init__(
+        self, parent: tk.Misc, *, conn: sqlite3.Connection, controller: object | None = None
+    ) -> None:
+        super().__init__(parent, padding=16)
         self.conn = conn
+        self.controller = controller
+
+        header = ttk.Frame(self)
+        header.grid(row=0, column=0, sticky="ew")
+        if self.controller is not None:
+            ttk.Button(
+                header, text="Back", command=lambda: self.controller.show("home")
+            ).pack(side="left")
+        ttk.Label(header, text="Customer Management", style="Header.TLabel").pack(
+            side="left", padx=(12, 0)
+        )
 
         actions = ttk.Frame(self)
-        actions.grid(row=0, column=0, sticky="ew")
+        actions.grid(row=1, column=0, sticky="ew", pady=(8, 0))
         ttk.Button(actions, text="Add Customer", command=self._open_add_modal).pack(
             side="left"
         )
@@ -21,7 +34,7 @@ class CustomersFrame(ttk.Frame):
         )
 
         table = ttk.LabelFrame(self, text="Customers", padding=12)
-        table.grid(row=1, column=0, sticky="nsew", pady=(12, 0))
+        table.grid(row=2, column=0, sticky="nsew", pady=(12, 0))
 
         self.tree = ttk.Treeview(
             table,
@@ -59,8 +72,11 @@ class CustomersFrame(ttk.Frame):
         table.rowconfigure(0, weight=1)
 
         self.columnconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
+        self.rowconfigure(2, weight=1)
 
+        self.refresh()
+
+    def on_show(self) -> None:
         self.refresh()
 
     def refresh(self) -> None:

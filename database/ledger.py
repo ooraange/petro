@@ -64,8 +64,8 @@ def record_customer_transaction(
     entry_type = _normalize_entry_type(entry_type)
     fuel_type = _normalize_fuel_type(fuel_type)
     liters = float(liters)
-    if liters < 0:
-        raise ValueError("liters must be >= 0")
+    if liters <= 0:
+        raise ValueError("liters must be > 0")
 
     if entry_type == "DEBIT":
         row = conn.execute(
